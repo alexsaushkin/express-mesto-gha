@@ -6,7 +6,7 @@ const {
 } = require('./validation/errorConstants');
 const cards = require('./routes/cards');
 const users = require('./routes/users');
-const { PORT, DB_CONNECT } = require('./config');
+const { PORT, DB_CONNECT = 'mongodb://127.0.0.1:27017/mestodb' } = require('./config');
 
 const app = express();
 
