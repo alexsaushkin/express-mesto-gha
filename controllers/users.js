@@ -32,7 +32,7 @@ module.exports.createUser = (req, res) => {
   User.create({ name, about, avatar })
     .then((user) => res.send({ data: user }))
     .catch((err) => {
-      if (err.name === 'CastError') {
+      if (err.name === 'ValidationError') {
         res.status(ERROR_INCORRECT).send({ message: 'Неправильные данные.' });
         return;
       }
@@ -60,7 +60,7 @@ module.exports.updateProfile = (req, res) => {
         res.status(ERROR_NOT_FOUND).send({ message: 'Пользователь не найден.' });
         return;
       }
-      if (err.name === 'CastError') {
+      if (err.name === 'ValidationError') {
         res.status(ERROR_INCORRECT).send({ message: 'Неправильные данные.' });
         return;
       }
@@ -87,7 +87,7 @@ module.exports.updateAvatar = (req, res) => {
         res.status(ERROR_NOT_FOUND).send({ message: 'Пользователь не найден.' });
         return;
       }
-      if (err.name === 'CastError') {
+      if (err.name === 'ValidationError') {
         res.status(ERROR_INCORRECT).send({ message: 'Неправильные данные.' });
         return;
       }
