@@ -36,7 +36,7 @@ module.exports.updateProfile = (req, res) => {
       runValidators: true,
     },
   )
-    .then(user => res.send({ data: user }))
+    .then((user) => res.send({ data: user }))
     .catch((err) => res.status(500).send({ message: err.message }));
 };
 
@@ -53,6 +53,6 @@ module.exports.updateAvatar = (req, res) => {
       runValidators: true,
     },
   )
-    .then(user => res.send({ data: user }))
+    .then((user) => res.send({ data: user }))
     .catch((err) => res.status(500).send({ message: err.message }));
 };
