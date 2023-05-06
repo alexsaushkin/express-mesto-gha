@@ -1,9 +1,15 @@
 const Card = require('../models/cards');
+const {
+  ERROR_INCORRECT,
+  ERROR_NOT_FOUND,
+  ERROR_DEFAULT,
+  MESSAGE_DEFAULT,
+} = require('../validation/errorConstants');
 
 module.exports.getCards = (req, res) => {
   Card.find({})
     .then((cards) => res.send({ data: cards }))
-    .catch((err) => res.status(500).send({ message: err.message }));
+    .catch(() => res.status(500).send({ message: MESSAGE_DEFAULT }));
 };
 
 module.exports.createCard = (req, res) => {
@@ -11,7 +17,13 @@ module.exports.createCard = (req, res) => {
 
   Card.create({ name, link, owner: req.user._id })
     .then((card) => res.send({ data: card }))
-    .catch((err) => res.status(500).send({ message: err.message }));
+    .catch((err) => {
+      if (err.name === 'CastError') {
+        res.status(ERROR_INCORRECT).send({ message: 'Неправильные данные.' });
+        return;
+      }
+      res.status(ERROR_DEFAULT).send({ message: MESSAGE_DEFAULT });
+    });
 };
 
 module.exports.deleteCard = (req, res) => {
@@ -19,7 +31,13 @@ module.exports.deleteCard = (req, res) => {
 
   Card.findByIdAndRemove(cardId)
     .then((card) => res.send({ data: card }))
-    .catch((err) => res.status(500).send({ message: err.message }));
+    .catch((err) => {
+      if (err.name === 'DocumentNotFoundError') {
+        res.status(ERROR_NOT_FOUND).send({ message: 'Карточка не найдена.' });
+        return;
+      }
+      res.status(ERROR_DEFAULT).send({ message: MESSAGE_DEFAULT });
+    });
 };
 
 module.exports.addLike = (req, res) => {
@@ -31,7 +49,17 @@ module.exports.addLike = (req, res) => {
     { new: true },
   )
     .then((card) => res.send({ data: card }))
-    .catch((err) => res.status(500).send({ message: err.message }));
+    .catch((err) => {
+      if (err.name === 'DocumentNotFoundError') {
+        res.status(ERROR_NOT_FOUND).send({ message: 'Карточка не найдена.' });
+        return;
+      }
+      if (err.name === 'CastError') {
+        res.status(ERROR_INCORRECT).send({ message: 'Неправильные данные.' });
+        return;
+      }
+      res.status(ERROR_DEFAULT).send({ message: MESSAGE_DEFAULT });
+    });
 };
 
 module.exports.removeLike = (req, res) => {
@@ -43,5 +71,15 @@ module.exports.removeLike = (req, res) => {
     { new: true },
   )
     .then((card) => res.send({ data: card }))
-    .catch((err) => res.status(500).send({ message: err.message }));
+    .catch((err) => {
+      if (err.name === 'DocumentNotFoundError') {
+        res.status(ERROR_NOT_FOUND).send({ message: 'Карточка не найдена.' });
+        return;
+      }
+      if (err.name === 'CastError') {
+        res.status(ERROR_INCORRECT).send({ message: 'Неправильные данные.' });
+        return;
+      }
+      res.status(ERROR_DEFAULT).send({ message: MESSAGE_DEFAULT });
+    });
 };

@@ -1,9 +1,15 @@
 const User = require('../models/users');
+const {
+  ERROR_INCORRECT,
+  ERROR_NOT_FOUND,
+  ERROR_DEFAULT,
+  MESSAGE_DEFAULT,
+} = require('../validation/errorConstants');
 
 module.exports.getUsers = (req, res) => {
   User.find({})
     .then((users) => res.send({ data: users }))
-    .catch((err) => res.status(500).send({ message: err.message }));
+    .catch(() => res.status(ERROR_DEFAULT).send({ message: MESSAGE_DEFAULT }));
 };
 
 module.exports.getUser = (req, res) => {
@@ -11,7 +17,13 @@ module.exports.getUser = (req, res) => {
 
   User.findById(userId)
     .then((user) => res.send({ data: user }))
-    .catch((err) => res.status(500).send({ message: err.message }));
+    .catch((err) => {
+      if (err.name === 'DocumentNotFoundError') {
+        res.status(ERROR_NOT_FOUND).send({ message: 'Пользователь не найден.' });
+        return;
+      }
+      res.status(ERROR_DEFAULT).send({ message: MESSAGE_DEFAULT });
+    });
 };
 
 module.exports.createUser = (req, res) => {
@@ -19,7 +31,13 @@ module.exports.createUser = (req, res) => {
 
   User.create({ name, about, avatar })
     .then((user) => res.send({ data: user }))
-    .catch((err) => res.status(500).send({ message: err.message }));
+    .catch((err) => {
+      if (err.name === 'CastError') {
+        res.status(ERROR_INCORRECT).send({ message: 'Неправильные данные.' });
+        return;
+      }
+      res.status(ERROR_DEFAULT).send({ message: MESSAGE_DEFAULT });
+    });
 };
 
 module.exports.updateProfile = (req, res) => {
@@ -37,7 +55,17 @@ module.exports.updateProfile = (req, res) => {
     },
   )
     .then((user) => res.send({ data: user }))
-    .catch((err) => res.status(500).send({ message: err.message }));
+    .catch((err) => {
+      if (err.name === 'DocumentNotFoundError') {
+        res.status(ERROR_NOT_FOUND).send({ message: 'Пользователь не найден.' });
+        return;
+      }
+      if (err.name === 'CastError') {
+        res.status(ERROR_INCORRECT).send({ message: 'Неправильные данные.' });
+        return;
+      }
+      res.status(ERROR_DEFAULT).send({ message: MESSAGE_DEFAULT });
+    });
 };
 
 module.exports.updateAvatar = (req, res) => {
@@ -54,5 +82,15 @@ module.exports.updateAvatar = (req, res) => {
     },
   )
     .then((user) => res.send({ data: user }))
-    .catch((err) => res.status(500).send({ message: err.message }));
+    .catch((err) => {
+      if (err.name === 'DocumentNotFoundError') {
+        res.status(ERROR_NOT_FOUND).send({ message: 'Пользователь не найден.' });
+        return;
+      }
+      if (err.name === 'CastError') {
+        res.status(ERROR_INCORRECT).send({ message: 'Неправильные данные.' });
+        return;
+      }
+      res.status(ERROR_DEFAULT).send({ message: MESSAGE_DEFAULT });
+    });
 };
