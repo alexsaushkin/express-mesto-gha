@@ -30,10 +30,15 @@ module.exports.deleteCard = (req, res) => {
   const { cardId } = req.params;
 
   Card.findByIdAndRemove(cardId)
+    .orFail()
     .then((card) => res.send({ data: card }))
     .catch((err) => {
       if (err.name === 'DocumentNotFoundError') {
         res.status(ERROR_NOT_FOUND).send({ message: 'Карточка не найдена.' });
+        return;
+      }
+      if (err.name === 'ValidationError' || err.name === 'CastError') {
+        res.status(ERROR_INCORRECT).send({ message: 'Неправильные данные.' });
         return;
       }
       res.status(ERROR_DEFAULT).send({ message: MESSAGE_DEFAULT });
@@ -48,13 +53,14 @@ module.exports.addLike = (req, res) => {
     { $addToSet: { likes: req.user._id } },
     { new: true },
   )
+    .orFail()
     .then((card) => res.send({ data: card }))
     .catch((err) => {
       if (err.name === 'DocumentNotFoundError') {
         res.status(ERROR_NOT_FOUND).send({ message: 'Карточка не найдена.' });
         return;
       }
-      if (err.name === 'ValidationError') {
+      if (err.name === 'ValidationError' || err.name === 'CastError') {
         res.status(ERROR_INCORRECT).send({ message: 'Неправильные данные.' });
         return;
       }
@@ -70,13 +76,14 @@ module.exports.removeLike = (req, res) => {
     { $pull: { likes: req.user._id } },
     { new: true },
   )
+    .orFail()
     .then((card) => res.send({ data: card }))
     .catch((err) => {
       if (err.name === 'DocumentNotFoundError') {
         res.status(ERROR_NOT_FOUND).send({ message: 'Карточка не найдена.' });
         return;
       }
-      if (err.name === 'ValidationError') {
+      if (err.name === 'ValidationError' || err.name === 'CastError') {
         res.status(ERROR_INCORRECT).send({ message: 'Неправильные данные.' });
         return;
       }

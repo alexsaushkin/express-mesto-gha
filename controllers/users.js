@@ -16,10 +16,15 @@ module.exports.getUser = (req, res) => {
   const { userId } = req.params;
 
   User.findById(userId)
+    .orFail()
     .then((user) => res.send({ data: user }))
     .catch((err) => {
       if (err.name === 'DocumentNotFoundError') {
         res.status(ERROR_NOT_FOUND).send({ message: 'Пользователь не найден.' });
+        return;
+      }
+      if (err.name === 'ValidationError' || err.name === 'CastError') {
+        res.status(ERROR_INCORRECT).send({ message: 'Неправильные данные.' });
         return;
       }
       res.status(ERROR_DEFAULT).send({ message: MESSAGE_DEFAULT });

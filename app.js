@@ -1,6 +1,9 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const process = require('process');
+const {
+  ERROR_NOT_FOUND,
+} = require('./validation/errorConstants');
 const cards = require('./routes/cards');
 const users = require('./routes/users');
 
@@ -29,6 +32,10 @@ app.use((req, res, next) => {
 
 app.use('/cards', cards);
 app.use('/users', users);
+app.use('*', (req, res) => {
+  res.status(ERROR_NOT_FOUND)
+    .send({ message: 'Страница не найдена.' });
+});
 
 app.listen(PORT, () => {
   console.log(`App listening on port ${PORT}`);
