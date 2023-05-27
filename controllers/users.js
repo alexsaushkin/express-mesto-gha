@@ -11,8 +11,8 @@ module.exports.getUsers = (req, res, next) => {
     .catch(next);
 };
 
-const findUser = (req, res, id, next) => {
-  User.findById(id)
+const findUser = (req, res, userId, next) => {
+  User.findById(userId)
     .orFail()
     .then((user) => res.send({ data: user }))
     .catch((err) => {
@@ -27,12 +27,13 @@ const findUser = (req, res, id, next) => {
 };
 
 module.exports.getUser = (req, res) => {
-  const { userId } = req.params;
-  findUser(req, res, userId);
+  const id = req.params.userId;
+  findUser(req, res, id);
 };
 
 module.exports.getMe = (req, res) => {
-  findUser(req, res, req.user._id);
+  const id = req.user._id;
+  findUser(req, res, id);
 };
 
 module.exports.createUser = (req, res, next) => {
