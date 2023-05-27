@@ -13,12 +13,12 @@ module.exports.createCard = (req, res, next) => {
   const { name, link } = req.body;
 
   Card.create({ name, link, owner: req.user._id })
-    .then((card) => res.send({ data: card }))
+    .then((card) => res.status(201).send({ data: card }))
     .catch((err) => {
       if (err.name === 'ValidationError') {
-        next(new BadRequestError('Неправильные данные'));
+        return next(new BadRequestError('Неправильные данные'));
       }
-      next(err);
+      return next(err);
     });
 };
 
@@ -37,12 +37,12 @@ module.exports.deleteCard = (req, res, next) => {
     })
     .catch((err) => {
       if (err.name === 'DocumentNotFoundError') {
-        next(new NotFoundError('Карточка не найдена.'));
+        return next(new NotFoundError('Карточка не найдена.'));
       }
       if (err.name === 'ValidationError' || err.name === 'CastError') {
-        next(new BadRequestError('Неправильные данные.'));
+        return next(new BadRequestError('Неправильные данные.'));
       }
-      next(err);
+      return next(err);
     });
 };
 
@@ -58,12 +58,12 @@ module.exports.addLike = (req, res, next) => {
     .then((card) => res.send({ data: card }))
     .catch((err) => {
       if (err.name === 'DocumentNotFoundError') {
-        next(new NotFoundError('Карточка не найдена.'));
+        return next(new NotFoundError('Карточка не найдена.'));
       }
       if (err.name === 'ValidationError' || err.name === 'CastError') {
-        next(new BadRequestError('Неправильные данные.'));
+        return next(new BadRequestError('Неправильные данные.'));
       }
-      next(err);
+      return next(err);
     });
 };
 
@@ -79,11 +79,11 @@ module.exports.removeLike = (req, res, next) => {
     .then((card) => res.send({ data: card }))
     .catch((err) => {
       if (err.name === 'DocumentNotFoundError') {
-        next(new NotFoundError('Карточка не найдена.'));
+        return next(new NotFoundError('Карточка не найдена.'));
       }
       if (err.name === 'ValidationError' || err.name === 'CastError') {
-        next(new BadRequestError('Неправильные данные.'));
+        return next(new BadRequestError('Неправильные данные.'));
       }
-      next(err);
+      return next(err);
     });
 };

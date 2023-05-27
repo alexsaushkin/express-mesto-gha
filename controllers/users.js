@@ -15,7 +15,7 @@ module.exports.getUser = async (req, res, next) => {
   try {
     const user = await User.findById(req.params.userId);
     if (user) {
-      res.status(200).send({ user });
+      res.send({ user });
     } else {
       throw new NotFoundError('Пользователь не найден');
     }
@@ -33,7 +33,7 @@ module.exports.getMe = async (req, res, next) => {
   try {
     const user = await User.findById(userId);
     if (user) {
-      res.status(200).send({ user });
+      res.send({ user });
     } else {
       throw new NotFoundError('Пользователь не найден.');
     }
@@ -55,7 +55,7 @@ module.exports.createUser = (req, res, next) => {
       email,
       password: hash,
     }))
-    .then((user) => res.send({
+    .then((user) => res.status(201).send({
       name: user.name,
       about: user.about,
       avatar: user.avatar,
@@ -64,12 +64,12 @@ module.exports.createUser = (req, res, next) => {
     }))
     .catch((err) => {
       if (err.name === 'ValidationError') {
-        next(new BadRequestError('Неправильные данные.'));
+        return next(new BadRequestError('Неправильные данные.'));
       }
       if (err.code === 11000) {
-        next(new ConflictError('Данный email уже зарегистрирован.'));
+        return next(new ConflictError('Данный email уже зарегистрирован.'));
       }
-      next(err);
+      return next(err);
     });
 };
 
@@ -90,12 +90,12 @@ module.exports.updateProfile = (req, res, next) => {
     .then((user) => res.send({ data: user }))
     .catch((err) => {
       if (err.name === 'DocumentNotFoundError') {
-        next(new NotFoundError('Пользователь не найден.'));
+        return next(new NotFoundError('Пользователь не найден.'));
       }
       if (err.name === 'ValidationError') {
-        next(new BadRequestError('Неправильные данные.'));
+        return next(new BadRequestError('Неправильные данные.'));
       }
-      next(err);
+      return next(err);
     });
 };
 
@@ -115,12 +115,12 @@ module.exports.updateAvatar = (req, res, next) => {
     .then((user) => res.send({ data: user }))
     .catch((err) => {
       if (err.name === 'DocumentNotFoundError') {
-        next(new NotFoundError('Пользователь не найден.'));
+        return next(new NotFoundError('Пользователь не найден.'));
       }
       if (err.name === 'ValidationError') {
-        next(new BadRequestError('Неправильные данные.'));
+        return next(new BadRequestError('Неправильные данные.'));
       }
-      next(err);
+      return next(err);
     });
 };
 

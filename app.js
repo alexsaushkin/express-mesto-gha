@@ -5,7 +5,7 @@ const process = require('process');
 const {
   ERROR_DEFAULT,
   MESSAGE_DEFAULT,
-} = require('./validation/constants');
+} = require('./utils/constants');
 const cards = require('./routes/cards');
 const users = require('./routes/users');
 const { createUser, login } = require('./controllers/users');
