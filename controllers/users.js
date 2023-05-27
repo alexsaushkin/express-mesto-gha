@@ -1,51 +1,67 @@
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
 const User = require('../models/users');
-const {
-  ERROR_INCORRECT,
-  ERROR_NOT_FOUND,
-  ERROR_DEFAULT,
-  MESSAGE_DEFAULT,
-} = require('../validation/errorConstants');
+const BadRequestError = require('../errors/BadRequestError');
+const NotFoundError = require('../errors/NotFoundError');
+const UnauthorizedError = require('../errors/UnauthorizedError');
+const ConflictError = require('../errors/ConflictError');
 
-module.exports.getUsers = (req, res) => {
+module.exports.getUsers = (req, res, next) => {
   User.find({})
     .then((users) => res.send({ data: users }))
-    .catch(() => res.status(ERROR_DEFAULT).send({ message: MESSAGE_DEFAULT }));
+    .catch(next);
 };
 
-module.exports.getUser = (req, res) => {
-  const { userId } = req.params;
-
-  User.findById(userId)
+const findUser = (req, res, id, next) => {
+  User.findById(id)
     .orFail()
     .then((user) => res.send({ data: user }))
     .catch((err) => {
       if (err.name === 'DocumentNotFoundError') {
-        res.status(ERROR_NOT_FOUND).send({ message: 'Пользователь не найден.' });
-        return;
+        next(new NotFoundError('Пользователь не найден.'));
       }
       if (err.name === 'ValidationError' || err.name === 'CastError') {
-        res.status(ERROR_INCORRECT).send({ message: 'Неправильные данные.' });
-        return;
+        next(new BadRequestError('Неправильные данные.'));
       }
-      res.status(ERROR_DEFAULT).send({ message: MESSAGE_DEFAULT });
+      next(err);
     });
 };
 
-module.exports.createUser = (req, res) => {
-  const { name, about, avatar } = req.body;
+module.exports.getUser = (req, res) => {
+  const { userId } = req.params;
+  findUser(req, res, userId);
+};
 
-  User.create({ name, about, avatar })
+module.exports.getMe = (req, res) => {
+  findUser(req, res, req.user._id);
+};
+
+module.exports.createUser = (req, res, next) => {
+  const {
+    name, about, avatar, email, password,
+  } = req.body;
+
+  bcrypt.hash(password, 10)
+    .then((hash) => User.create({
+      name,
+      about,
+      avatar,
+      email,
+      password: hash,
+    }))
     .then((user) => res.send({ data: user }))
     .catch((err) => {
       if (err.name === 'ValidationError') {
-        res.status(ERROR_INCORRECT).send({ message: 'Неправильные данные.' });
-        return;
+        next(new BadRequestError('Неправильные данные.'));
       }
-      res.status(ERROR_DEFAULT).send({ message: MESSAGE_DEFAULT });
+      if (err.code === 11000) {
+        next(new ConflictError('Данный email уже зарегистрирован.'));
+      }
+      next(err);
     });
 };
 
-module.exports.updateProfile = (req, res) => {
+module.exports.updateProfile = (req, res, next) => {
   const { name, about } = req.body;
 
   User.findByIdAndUpdate(
@@ -62,18 +78,16 @@ module.exports.updateProfile = (req, res) => {
     .then((user) => res.send({ data: user }))
     .catch((err) => {
       if (err.name === 'DocumentNotFoundError') {
-        res.status(ERROR_NOT_FOUND).send({ message: 'Пользователь не найден.' });
-        return;
+        next(new NotFoundError('Пользователь не найден.'));
       }
       if (err.name === 'ValidationError') {
-        res.status(ERROR_INCORRECT).send({ message: 'Неправильные данные.' });
-        return;
+        next(new BadRequestError('Неправильные данные.'));
       }
-      res.status(ERROR_DEFAULT).send({ message: MESSAGE_DEFAULT });
+      next(err);
     });
 };
 
-module.exports.updateAvatar = (req, res) => {
+module.exports.updateAvatar = (req, res, next) => {
   const { avatar } = req.body;
 
   User.findByIdAndUpdate(
@@ -89,13 +103,29 @@ module.exports.updateAvatar = (req, res) => {
     .then((user) => res.send({ data: user }))
     .catch((err) => {
       if (err.name === 'DocumentNotFoundError') {
-        res.status(ERROR_NOT_FOUND).send({ message: 'Пользователь не найден.' });
-        return;
+        next(new NotFoundError('Пользователь не найден.'));
       }
       if (err.name === 'ValidationError') {
-        res.status(ERROR_INCORRECT).send({ message: 'Неправильные данные.' });
-        return;
+        next(new BadRequestError('Неправильные данные.'));
       }
-      res.status(ERROR_DEFAULT).send({ message: MESSAGE_DEFAULT });
+      next(err);
+    });
+};
+
+module.exports.login = (req, res, next) => {
+  const { email, password } = req.body;
+
+  return User.findUserByCredentials(email, password).select('+password')
+    .then((user) => {
+      res.send({
+        token: jwt.sign(
+          { _id: user._id },
+          'super-strong-secret',
+          { expiresIn: '7d' },
+        ),
+      });
+    })
+    .catch(() => {
+      next(new UnauthorizedError('Неправильные логин или пароль.'));
     });
 };

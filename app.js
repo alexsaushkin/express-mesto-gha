@@ -1,11 +1,20 @@
 const express = require('express');
 const mongoose = require('mongoose');
+const { errors } = require('celebrate');
 const process = require('process');
 const {
-  ERROR_NOT_FOUND,
-} = require('./validation/errorConstants');
+  ERROR_DEFAULT,
+  MESSAGE_DEFAULT,
+} = require('./validation/constants');
 const cards = require('./routes/cards');
 const users = require('./routes/users');
+const { createUser, login } = require('./controllers/users');
+const auth = require('./middlewares/auth');
+const NotFoundError = require('./errors/NotFoundError');
+const {
+  validateLogin,
+  validateCreate,
+} = require('./validation/userValidators');
 const { PORT, DB_CONNECT = 'mongodb://127.0.0.1:27017/mestodb' } = require('./config');
 
 const app = express();
@@ -20,20 +29,23 @@ mongoose.connect(DB_CONNECT, {
 
 app.use(express.json());
 
-// миддлвэр, добавляющий пользователя
-app.use((req, res, next) => {
-  req.user = {
-    _id: '5d8b8592978f8bd833ca8133',
-  };
+app.post('/signin', validateLogin, login);
+app.post('/signup', validateCreate, createUser);
 
-  next();
-});
+app.use(auth);
 
 app.use('/cards', cards);
 app.use('/users', users);
-app.use('*', (req, res) => {
-  res.status(ERROR_NOT_FOUND)
-    .send({ message: 'Страница не найдена.' });
+app.use('*', (req, res, next) => {
+  next(new NotFoundError('Страница не найдена.'));
+});
+
+app.use(errors());
+
+app.use((err, req, res, next) => {
+  const { statusCode = ERROR_DEFAULT, message = MESSAGE_DEFAULT } = err;
+  res.status(statusCode).send({ message });
+  next();
 });
 
 app.listen(PORT, () => {

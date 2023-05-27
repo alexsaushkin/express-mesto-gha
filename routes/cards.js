@@ -1,4 +1,5 @@
 const router = require('express').Router();
+const { validateCard, validateCardId } = require('../validation/cardValidators');
 
 const {
   getCards,
@@ -9,9 +10,9 @@ const {
 } = require('../controllers/cards');
 
 router.get('/', getCards);
-router.post('/', createCard);
-router.delete('/:cardId', deleteCard);
-router.put('/:cardId/likes', addLike);
-router.delete('/:cardId/likes', removeLike);
+router.post('/', validateCard, createCard);
+router.delete('/:cardId', validateCardId, deleteCard);
+router.put('/:cardId/likes', validateCardId, addLike);
+router.delete('/:cardId/likes', validateCardId, removeLike);
 
 module.exports = router;
