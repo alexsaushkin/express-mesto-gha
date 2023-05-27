@@ -1,5 +1,7 @@
 const express = require('express');
 const mongoose = require('mongoose');
+const helmet = require('helmet');
+const rateLimit = require('express-rate-limit');
 const { errors } = require('celebrate');
 const process = require('process');
 const {
@@ -17,6 +19,12 @@ const {
 } = require('./validation/userValidators');
 const { PORT, DB_CONNECT = 'mongodb://127.0.0.1:27017/mestodb' } = require('./config');
 
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 100,
+  standardHeaders: true,
+  legacyHeaders: false,
+});
 const app = express();
 
 process.on('uncaughtException', (err, origin) => {
@@ -27,7 +35,9 @@ mongoose.connect(DB_CONNECT, {
   useNewUrlParser: true,
 });
 
+app.use(helmet());
 app.use(express.json());
+app.use(limiter);
 
 app.post('/signin', validateLogin, login);
 app.post('/signup', validateCreate, createUser);
