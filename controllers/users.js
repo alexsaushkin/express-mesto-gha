@@ -11,26 +11,35 @@ module.exports.getUsers = (req, res, next) => {
     .catch(next);
 };
 
-const findUser = (req, res, userId, next) => {
-  User.findById(userId)
-    .orFail()
-    .then((user) => {
-      if (!user) {
-        next(new NotFoundError({ message: 'Пользователь не найден' }));
-      }
-      res.send({ data: user });
-    })
-    .catch(next);
+module.exports.getUser = async (req, res, next) => {
+  try {
+    const user = await User.findById(req.params.userId);
+    if (user) {
+      res.status(200).send({ user });
+    } else {
+      throw new NotFoundError('Пользователь не найден');
+    }
+  } catch (err) {
+    if (err.name === 'CastError') {
+      next(new BadRequestError('Неправильный id'));
+    } else {
+      next(err);
+    }
+  }
 };
 
-module.exports.getUser = (req, res, next) => {
-  const id = req.params.userId;
-  findUser(req, res, id, next);
-};
-
-module.exports.getMe = (req, res, next) => {
-  const id = req.user._id;
-  findUser(req, res, id, next);
+module.exports.getMe = async (req, res, next) => {
+  const userId = req.user._id;
+  try {
+    const user = await User.findById(userId);
+    if (user) {
+      res.status(200).send({ user });
+    } else {
+      throw new NotFoundError('Пользователь не найден.');
+    }
+  } catch (err) {
+    next(err);
+  }
 };
 
 module.exports.createUser = (req, res, next) => {
