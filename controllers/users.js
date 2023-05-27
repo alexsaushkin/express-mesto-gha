@@ -14,16 +14,13 @@ module.exports.getUsers = (req, res, next) => {
 const findUser = (req, res, userId, next) => {
   User.findById(userId)
     .orFail()
-    .then((user) => res.send({ data: user }))
-    .catch((err) => {
-      if (err.name === 'DocumentNotFoundError') {
-        next(new NotFoundError('Пользователь не найден.'));
+    .then((user) => {
+      if (!user) {
+        next(new NotFoundError({ message: 'Пользователь не найден' }));
       }
-      if (err.name === 'ValidationError' || err.name === 'CastError') {
-        next(new BadRequestError('Неправильные данные.'));
-      }
-      next(err);
-    });
+      res.send({ data: user });
+    })
+    .catch(next);
 };
 
 module.exports.getUser = (req, res) => {
