@@ -3,7 +3,7 @@ const { URL_REGEXP } = require('./constants');
 
 const validateUser = celebrate({
   params: Joi.object().keys({
-    userId: Joi.objectId().required(),
+    userId: Joi.string().required().hex().length(24),
   }),
 });
 
