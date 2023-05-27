@@ -3,7 +3,6 @@ const jwt = require('jsonwebtoken');
 const User = require('../models/users');
 const BadRequestError = require('../errors/BadRequestError');
 const NotFoundError = require('../errors/NotFoundError');
-const UnauthorizedError = require('../errors/UnauthorizedError');
 const ConflictError = require('../errors/ConflictError');
 
 module.exports.getUsers = (req, res, next) => {
@@ -49,7 +48,13 @@ module.exports.createUser = (req, res, next) => {
       email,
       password: hash,
     }))
-    .then((user) => res.send({ data: user }))
+    .then((user) => res.send({
+      name: user.name,
+      about: user.about,
+      avatar: user.avatar,
+      email: user.email,
+      _id: user._id,
+    }))
     .catch((err) => {
       if (err.name === 'ValidationError') {
         next(new BadRequestError('Неправильные данные.'));
@@ -115,7 +120,7 @@ module.exports.updateAvatar = (req, res, next) => {
 module.exports.login = (req, res, next) => {
   const { email, password } = req.body;
 
-  return User.findUserByCredentials(email, password).select('+password')
+  return User.findUserByCredentials(email, password)
     .then((user) => {
       res.send({
         token: jwt.sign(
@@ -125,7 +130,5 @@ module.exports.login = (req, res, next) => {
         ),
       });
     })
-    .catch(() => {
-      next(new UnauthorizedError('Неправильные логин или пароль.'));
-    });
+    .catch(next);
 };
