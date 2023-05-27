@@ -23,14 +23,14 @@ const findUser = (req, res, userId, next) => {
     .catch(next);
 };
 
-module.exports.getUser = (req, res) => {
+module.exports.getUser = (req, res, next) => {
   const id = req.params.userId;
-  findUser(req, res, id);
+  findUser(req, res, id, next);
 };
 
-module.exports.getMe = (req, res) => {
+module.exports.getMe = (req, res, next) => {
   const id = req.user._id;
-  findUser(req, res, id);
+  findUser(req, res, id, next);
 };
 
 module.exports.createUser = (req, res, next) => {
